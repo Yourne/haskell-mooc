@@ -117,7 +117,7 @@ sumTo x = x + sumTo (x - 1)
 -- Use recursion.
 
 power :: Integer -> Integer -> Integer
-power n k = 1
+power n 0 = 1
 power n k = n * power n k-1
 
 ------------------------------------------------------------------------------
@@ -137,4 +137,16 @@ power n k = n * power n k-1
 --   ilog3 7 ==> 2
 
 ilog3 :: Integer -> Integer
-ilog3 = todo
+ilog3 0 = 0
+ilog3 n = 1 + ilog3 x
+    where x = div n 3
+-- ilog3 n = 1 + ilog3 (div n 3) 
+-- this version ends up to an infinite loop
+-- e g increment x = let x = x + 1 in x  is an inifite loop
+
+
+-- ilog3 2
+-- n = 1 + (ilog3 (div 2 3 -> 0) -> 0)
+-- ilog3 7
+-- n = 1 + (ilog (div 7 3 -> 2) -> ilog 2)
+-- n = 1 + 1
