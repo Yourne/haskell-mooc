@@ -28,7 +28,14 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = todo
+maxBy measure a b = if x > y then a else b
+    where x = measure a
+          y = measure b
+-- maxBy measure a b =
+--     let x = measure a
+-- 	y = measure b
+--     in if x > y then a else b
+
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -40,7 +47,10 @@ maxBy measure a b = todo
 --   mapMaybe length (Just "abc") ==> Just 3
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f x = todo
+mapMaybe f Nothing = Nothing
+mapMaybe f (Just a) = Just (f a) 
+-- mapMaybe f x = todo
+
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function mapMaybe2 that works like mapMaybe
@@ -53,8 +63,12 @@ mapMaybe f x = todo
 --   mapMaybe2 div Nothing  (Just 3)  ==>  Nothing
 --   mapMaybe2 div (Just 6) Nothing   ==>  Nothing
 
+-- TODO LOOK AT SOLUTIONS: MAYBE I CAN SKIP A PATTERN
 mapMaybe2 :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
-mapMaybe2 f x y = todo
+mapMaybe2 f (Just a) (Just b) = Just $ f a b 
+mapMaybe2 f Nothing (Just a) = Nothing
+mapMaybe2 f (Just a) Nothing = Nothing
+mapMaybe2 f Nothing Nothing = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the functions firstHalf and palindrome so that
@@ -76,9 +90,12 @@ mapMaybe2 f x y = todo
 palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
-firstHalf = todo
+firstHalf :: String -> String
+firstHalf xs = take half xs
+    where half = if even $ length xs then div (length xs ) 2 else div (length xs) 2 + 1 
 
-palindrome = todo
+palindrome :: String -> Bool
+palindrome xs = (reverse xs) == xs
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -96,7 +113,10 @@ palindrome = todo
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize = todo
+capitalize xs = unwords $ map capitalizeFirst $ words xs
+
+capitalizeFirst :: String -> String
+capitalizeFirst xs = ((:) (toUpper . head $ xs) []) ++ tail xs
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -113,7 +133,7 @@ capitalize = todo
 --   * the function takeWhile
 
 powers :: Int -> Int -> [Int]
-powers k max = todo
+powers k max = takeWhile  (\x -> x <= max) (map (\x -> k ^ x) [0..(div max 2)])
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
@@ -136,7 +156,10 @@ powers k max = todo
 --     ==> Avvt
 
 while :: (a->Bool) -> (a->a) -> a -> a
-while check update value = todo
+while check update value
+    | check value == False = value
+    | otherwise = while check update x
+        where x = update value
 
 ------------------------------------------------------------------------------
 -- Ex 8: another version of a while loop. This time, the check
@@ -156,7 +179,9 @@ while check update value = todo
 -- Hint! Remember the case-of expression from lecture 2.
 
 whileRight :: (a -> Either b a) -> a -> b
-whileRight check x = todo
+whileRight check x = case check x of
+    Right x -> whileRight check x 
+    Left x -> x
 
 -- for the whileRight examples:
 -- step k x doubles x if it's less than k
@@ -180,7 +205,21 @@ bomb x = Right (x-1)
 -- Hint! This is a great use for list comprehensions
 
 joinToLength :: Int -> [String] -> [String]
-joinToLength = todo
+-- vertical bar in list comprehention is the "such that" of the set building
+-- arrow function assigns values in list comprehension
+joinToLength k ls = [str | first <- ls, last <- ls, let str = first ++ last, length str == k]
+
+-- -- questo fa un altra cosa: genera combinazioni
+-- joinToLength len str_ls = 
+--     let equalLen = takeWhile (\s -> length s = len) str_ls
+--         shorterLen = takeWhile (\s -> length s < len) str_ls
+--     in equalLen ++ (takeWhile (s -> length s < len) combLs)
+
+-- comb ls = case length ls of 
+--     1 -> head ls
+--     _ -> (dist (head ls) (tail ls ) ): ( comb (tail ls) ) : (head  ls) : []
+
+-- dist a ls = map (\ x -> a ++ x) ls 
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
@@ -193,6 +232,11 @@ joinToLength = todo
 --   [1,2,3] +|+ [4,5,6]  ==> [1,4]
 --   [] +|+ [True]        ==> [True]
 --   [] +|+ []            ==> []
+(+|+) :: [a] -> [a] -> [a]
+-- a +|+ b = head a : head b : []  -- se messo qui, non passa il test. 
+a +|+ [] = [head a]
+[] +|+ a = head a : []
+a +|+ b = head a : head b : []
 
 
 ------------------------------------------------------------------------------
@@ -209,8 +253,25 @@ joinToLength = todo
 --   sumRights [Right 1, Left "bad value", Right 2]  ==>  3
 --   sumRights [Left "bad!", Left "missing"]         ==>  0
 
+-- FIRST VERSION
+-- sumRights :: [Either a Int] -> Int
+-- sumRights ls = sumInt $ (map convert ls)
+
+-- convert :: Either a Int -> Int
+-- convert (Right i) = i
+-- convert (Left a) = 0
+
+-- sumInt :: [Int] -> Int
+-- sumInt [] = 0
+-- sumInt (first:rest) = first + sumInt rest
+
+-- CHALLENGE VERSION
 sumRights :: [Either a Int] -> Int
-sumRights = todo
+-- sumRights ls = sum $ map (either (\x -> 0) id) ls
+sumRights = sum . map (either (\x -> 0) id) 
+
+-- either :: (a -> c) -> (b -> c) -> Either a b -> c 
+-- applies f1 to Left, f2 to Right and return c type
 
 ------------------------------------------------------------------------------
 -- Ex 12: recall the binary function composition operation
@@ -226,7 +287,8 @@ sumRights = todo
 --   multiCompose [(3*), (2^), (+1)] 0 ==> 6
 --   multiCompose [(+1), (2^), (3*)] 0 ==> 2
 
-multiCompose fs = todo
+multiCompose [] = id
+multiCompose (f:fs) = f . multiCompose fs
 
 ------------------------------------------------------------------------------
 -- Ex 13: let's consider another way to compose multiple functions. Given
@@ -247,7 +309,7 @@ multiCompose fs = todo
 --   multiApp id [head, (!!2), last] "axbxc" ==> ['a','b','c'] i.e. "abc"
 --   multiApp sum [head, (!!2), last] [1,9,2,9,3] ==> 6
 
-multiApp = todo
+multiApp f gs x = f $ map (\g -> g x ) gs
 
 ------------------------------------------------------------------------------
 -- Ex 14: in this exercise you get to implement an interpreter for a
@@ -283,3 +345,24 @@ multiApp = todo
 
 interpreter :: [String] -> [String]
 interpreter commands = todo
+
+-- case 1 coordinate
+-- up n = n + 1
+-- down n = n - 1
+-- inter = sum . map (\g -> g 0)
+-- inter [up, up, up, up, down] 
+
+-- case 2 coordinates
+up (x:y) = x : head y + 1 : []
+down (x:y) = x : head y - 1 : [] 
+
+readCmd cmd = case cmd of "up" -> up
+--                           "down" -> (\ x : head y - 1 : [])
+
+-- map ReadCmd ["up", "up"] -> a list of functions
+-- ["up", "down", "up"] 
+
+
+-- qui si scontrano due pianeti: incrementare lo stato di x e y, 
+-- oppure applicare ricorsivamente le funzioni dato uno stato iniziale noto.
+-- credo sia un altro di quei casi in cui devo usare le liste con tail.
